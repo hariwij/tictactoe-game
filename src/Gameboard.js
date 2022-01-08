@@ -218,8 +218,14 @@ export default class Gameboard extends React.Component {
         >
           Hard Level : <strong>{hl}</strong>&nbsp;&nbsp;&nbsp;&nbsp; Current
           Player : <strong>{pl}</strong>&nbsp;&nbsp;&nbsp;&nbsp; Playing With :{" "}
-          <strong>{pw}</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <button className="btn btn-danger btn-sm float-right" onClick={()=>this.playAgain()}>Restart</button>
+          <strong>{pw}</strong>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <button
+            className="btn btn-danger btn-sm float-right"
+            onClick={() => this.playAgain()}
+          >
+            Restart
+          </button>
         </div>
         <div className="d-flex justify-content-center">
           <div
@@ -247,21 +253,23 @@ export default class Gameboard extends React.Component {
         {this.state.isGameOver ||
         this.state.isGameDraw ||
         this.state.p1won ||
-        this.state.p2won ? (<GameEnd 
-             onClick={() => this.playAgain()}
-        txt={
-          this.state.isGameDraw
-            ? "Game Draw!"
-            : this.state.p1won
-            ? this.state.playWithPc
-              ? "You Won!"
-              : "Player X Won!"
-            : this.state.p2won
-            ? this.state.playWithPc
-              ? "You Lose!"
-              : "Player O Won!"
-            : ""
-        }></GameEnd>
+        this.state.p2won ? (
+          <GameEnd
+            onClick={() => this.playAgain()}
+            txt={
+              this.state.p1won
+                ? this.state.playWithPc
+                  ? "You Won!"
+                  : "Player X Won!"
+                : this.state.p2won
+                ? this.state.playWithPc
+                  ? "You Lose!"
+                  : "Player O Won!"
+                : this.state.isGameDraw
+                ? "Game Draw!"
+                : ""
+            }
+          ></GameEnd>
         ) : (
           ""
         )}
