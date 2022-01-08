@@ -1,12 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import Cell from "./Cell";
+import GameEnd from "./GameEnd";
+import Modal from "./Modal";
 
 export default class Gameboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      hardLevel: 1,
+      hardLevel: 0,
       map: [],
       mapSize: 3,
       emptyCell: 0,
@@ -15,11 +17,20 @@ export default class Gameboard extends React.Component {
       p1won: false,
       p2won: false,
       isGameDraw: false,
+      isGameOver: false,
+      showDialog: true,
     };
     this.reset();
   }
 
   cellClick(x, y) {
+    if (
+      this.state.isGameOver ||
+      this.state.isGameDraw ||
+      this.state.p1won ||
+      this.state.p2won
+    )
+      return;
     let tmp = this.state.map;
     if (this.state.currentPlayer == 1 && this.state.map[x][y] == 0) {
       tmp[x][y] = 1;
@@ -29,19 +40,23 @@ export default class Gameboard extends React.Component {
       this.setState({ map: tmp, currentPlayer: 1 });
     }
     this.setState({ p1won: this.CheckWin(tmp, 1) });
-    this.setState({ p2won: this.CheckWin(tmp, 2) });
-
     this.setState({ isGameDraw: this.GameOver(tmp) });
-
-    if (this.state.isGameDraw || this.state.won) {
+    if (this.state.isGameDraw || this.state.p1won) {
     } else if (this.state.playWithPc) {
       console.log("Auto Play");
       let nmap = this.Play(this.state.map, 2, 1, this.state.hardLevel);
       this.setState({ map: nmap, currentPlayer: 1 });
     }
+
+    this.setState({ p2won: this.CheckWin(tmp, 2) });
+    this.setState({ isGameDraw: this.GameOver(tmp) });
+    this.setState({
+      isGameOver: this.state.isGameDraw || this.state.p1won || this.state.p2won,
+    });
+    console.log(this.state.isGameOver);
   }
   reset() {
-    let tmap = this.state.map;
+    let tmap = [];
     for (let i = 0; i < this.state.mapSize; i++) {
       tmap.push(new Array(3).fill(0));
     }
@@ -57,18 +72,14 @@ export default class Gameboard extends React.Component {
     let res = new Array(4).fill(0);
     for (let r = 0; r < this.state.mapSize; r++) {
       for (let c = 0; c < this.state.mapSize; c++) {
-        if (Map[r][c] === Player) res[0]++; // Check Rows
-        if (Map[c][r] === Player) res[1]++; // Check Cols
-        if (Map[c][c] === Player) res[2]++; // Diagnal Left-Right
-        if (
-          Map[this.state.mapSize - 1 - c][this.state.mapSize - 1 - c] === Player
-        ) {
-          res[3]++; // Diagnal Left-Right
-        }
+        if (Map[r][c] === Player) res[0] += 1; // Check Rows
+        if (Map[c][r] === Player) res[1] += 1; // Check Cols
+        if (Map[c][c] === Player) res[2] += 1; // Diagonal Left-Right
+        if (Map[c][this.state.mapSize - 1 - c] === Player) res[3]++; // Diagonal Left-Right
       }
       if (res[0] == 3 || res[1] == 3 || res[2] == 3 || res[3] == 3) {
         console.log(Map);
-        console.log(res);
+        console.log("Player : ", Player, " Val : ", res);
         res = new Array(4).fill(0); // Reset Values
         return true;
       } // Check & Return
@@ -173,29 +184,87 @@ export default class Gameboard extends React.Component {
       Result[Result.Length] = new Array(2).fill(x + n, y - n);
     return Result;
   }
+  startGame(playWithPC, hardLevel) {
+    this.reset();
+    this.setState({
+      hardLevel: hardLevel,
+      playWithPc: playWithPC,
+      showDialog: false,
+    });
+  }
+  playAgain() {
+    this.reset();
+    this.setState({
+      showDialog: true,
+    });
+  }
   render() {
+    let hl = "";
+    if (this.state.hardLevel == 0) hl = "Easy";
+    else if (this.state.hardLevel == 1) hl = "Medium";
+    else if (this.state.hardLevel == 2) hl = "Hard";
+    let pl = "";
+    if (this.state.currentPlayer == 1) pl = "Player X";
+    else if (this.state.currentPlayer == 2) pl = "Player O (Friend)";
+    if (this.state.currentPlayer == 2 && this.state.playWithPc) pl = "Computer";
+    let pw = "";
+    if (this.state.playWithPc) pw = "Computer";
+    else pw = "Friend";
     return (
       <div>
-        <h1>Current Player : {this.state.currentPlayer}</h1>
-        <h2>Won Player 1: {this.state.p1won.toString()}</h2>
-        <h2>Won Player 2: {this.state.p2won.toString()}</h2>
-        <h2>Draw : {this.state.isGameDraw.toString()}</h2>
         <div
-          className="row border rounded mt-auto mb-auto"
-          style={{ width: "450px", height: "450px", padding: "5px" }}
+          className="alert alert-warning alert-dismissible fade show"
+          role="alert"
         >
-          {this.state.map.map((row, x) =>
-            row.map((value, y) => (
-              <Cell
-                key={x.toString() + y.toString()}
-                x={x}
-                y={y}
-                value={value}
-                onClick={(xpos, ypos) => this.cellClick(xpos, ypos)}
-              ></Cell>
-            ))
-          )}
+          Hard Level : <strong>{hl}</strong>&nbsp;&nbsp;&nbsp;&nbsp; Current
+          Player : <strong>{pl}</strong>&nbsp;&nbsp;&nbsp;&nbsp; Playing With :{" "}
+          <strong>{pw}</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <button className="btn btn-danger btn-sm float-right" onClick={()=>this.playAgain()}>Restart</button>
         </div>
+        <div className="d-flex justify-content-center">
+          <div
+            className="row border rounded mt-auto mb-auto text-white"
+            style={{ width: "450px", height: "450px", padding: "5px" }}
+          >
+            {this.state.map.map((row, x) =>
+              row.map((value, y) => (
+                <Cell
+                  key={x.toString() + y.toString()}
+                  x={x}
+                  y={y}
+                  value={value}
+                  onClick={(xpos, ypos) => this.cellClick(xpos, ypos)}
+                ></Cell>
+              ))
+            )}
+          </div>
+        </div>
+        {this.state.showDialog ? (
+          <Modal onClick={(v1, v2) => this.startGame(v1, v2)}></Modal>
+        ) : (
+          ""
+        )}
+        {this.state.isGameOver ||
+        this.state.isGameDraw ||
+        this.state.p1won ||
+        this.state.p2won ? (<GameEnd 
+             onClick={() => this.playAgain()}
+        txt={
+          this.state.isGameDraw
+            ? "Game Draw!"
+            : this.state.p1won
+            ? this.state.playWithPc
+              ? "You Won!"
+              : "Player X Won!"
+            : this.state.p2won
+            ? this.state.playWithPc
+              ? "You Lose!"
+              : "Player O Won!"
+            : ""
+        }></GameEnd>
+        ) : (
+          ""
+        )}
       </div>
     );
   }

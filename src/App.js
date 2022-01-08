@@ -6,7 +6,7 @@ function App() {
   return (
     <div
       className="container"
-      style={{ height: "100vh" }}
+      style={{ height: "100vh"}}
     >
       <Gameboard></Gameboard>
     </div>
