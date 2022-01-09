@@ -17,20 +17,13 @@ export default class Gameboard extends React.Component {
       p1won: false,
       p2won: false,
       isGameDraw: false,
-      isGameOver: false,
       showDialog: true,
     };
     this.reset();
   }
 
   cellClick(x, y) {
-    if (
-      this.state.isGameOver ||
-      this.state.isGameDraw ||
-      this.state.p1won ||
-      this.state.p2won
-    )
-      return;
+    if (this.state.isGameDraw || this.state.p1won || this.state.p2won) return;
     let tmp = this.state.map;
     if (this.state.currentPlayer == 1 && this.state.map[x][y] == 0) {
       tmp[x][y] = 1;
@@ -50,10 +43,6 @@ export default class Gameboard extends React.Component {
 
     this.setState({ p2won: this.CheckWin(tmp, 2) });
     this.setState({ isGameDraw: this.GameOver(tmp) });
-    this.setState({
-      isGameOver: this.state.isGameDraw || this.state.p1won || this.state.p2won,
-    });
-    console.log(this.state.isGameOver);
   }
   reset() {
     let tmap = [];
@@ -250,10 +239,7 @@ export default class Gameboard extends React.Component {
         ) : (
           ""
         )}
-        {this.state.isGameOver ||
-        this.state.isGameDraw ||
-        this.state.p1won ||
-        this.state.p2won ? (
+        {this.state.isGameDraw || this.state.p1won || this.state.p2won ? (
           <GameEnd
             onClick={() => this.playAgain()}
             txt={
